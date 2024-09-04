@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ChaTA</title>
+  <style>
+    .chat-title {
+      background: linear-gradient(to bottom, #990000, #990000);
+      color: rgb(255, 199,44);
+      font-size: 2em;
+      font-weight: bold;
+      text-align: center;
+      margin: 0;
+      padding: 40px 20px; /* Increase padding vertically */
+    }
+  
+    body {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+    }
+  
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      background-color: #fff;
+      max-height: 80vh; /* Decrease maximum height */
+      overflow-y: auto;
+    }
+  
+    .user-input {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 98%;
+      padding: 20px;
+      background: white;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: center;
+    }
+  
+    .user-input input {
+      flex-grow: 1;
+      margin-right: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  
+    .user-input button {
+      padding: 10px 50px;
+      background-color: #990000;
+      color: rgb(255, 196, 44);
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  
+    .user-input button:hover {
+      background-color: #0056b3;
+    }
+  
+    .chat-message {
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+  
+    .chat-message.user {
+      background-color: #eee;
+      color: black;
+      justify-content: flex-end;
+      align-self: flex-end;
+    }
+  
+    .chat-message.bot {
+      background-color: #eee;
+      justify-content: flex-start;
+      align-self: flex-start;
+    }
+  
+    .chat-message .avatar img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+  
+    .chat-message.user .avatar img {
+      order: 2;
+      margin-right: 0;
+      margin-left: 10px;
+    }
+  
+    .chat-message .message {
+      padding: 10px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container" id="chat-container">
+    <h1 class="chat-title">chaTA</h1>
+    <!-- Chat messages will be added here -->
+  </div>
+
+  <div class="user-input" id="user-input">
+    <input type="text" id="user-message" placeholder="Type your message here...">
+    <button onclick="sendMessage()">GO Trojan</button>
+  </div>
+
+ <!-- JavaScript -->
+  <script>
+    function loadChatHistory() {
+      const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+      chatHistory.forEach(({ sender, message }) => {
+        displayMessage(sender, message);
+      });
+    }
+
+    function sendMessage() {
+      const userInput = document.getElementById('user-message');
+      const userMessage = userInput.value.trim();
+
+      if (userMessage) {
+        displayMessage('user', userMessage);
+        saveChatHistory('user', userMessage);
+        getChatbotResponse(userMessage);
+        userInput.value = ''; // Clear the input field after sending
+      }
+    }
+
+    function displayMessage(sender, message) {
+      console.log('Display message function called with sender:', sender, 'and message:', message);
+      const chatContainer = document.getElementById('chat-container');
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('chat-message', sender);
+
+      const avatarElement = document.createElement('div');
+      avatarElement.classList.add('avatar');
+      const avatarImage = document.createElement('img');
+      avatarImage.src = sender === 'user' ? 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png' : 'https://images.thdstatic.com/productImages/820d4b0d-d1a5-47e9-a6e8-0fa3b0b51dd9/svn/gloss-finish-wall-sculptures-ncusct-210-04-64_600.jpg';
+      avatarElement.appendChild(avatarImage);
+
+      const messageContent = document.createElement('div');
+      messageContent.classList.add('message');
+
+      // Check if the message contains a video link
+      if (sender === 'bot' && message.includes('https://youtu.be/')) {
+        // Extract video ID and timestamp
+        const videoUrlMatch = message.match(/https:\/\/youtu\.be\/([a-zA-Z0-9_-]+)\?t=(\d+)/);
+        if (videoUrlMatch && videoUrlMatch.length > 1) {
+          const videoId = videoUrlMatch[1];
+          const timestamp = videoUrlMatch[2];
+          const embedUrl = `https://www.youtube.com/embed/${videoId}?start=${timestamp}`;
+          // Remove the URL from the message text
+          const messageText = message.replace(videoUrlMatch[0], '');
+          messageContent.textContent = messageText;
+
+          // Create the video iframe
+          const videoFrame = document.createElement('iframe');
+          videoFrame.src = embedUrl;
+          videoFrame.width = "560";
+          videoFrame.height = "315";
+          videoFrame.frameBorder = "0";
+          videoFrame.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture";
+          videoFrame.allowFullscreen = true;
+
+          // Add the text content first, then add the video iframe
+          messageElement.appendChild(avatarElement);
+          messageElement.appendChild(messageContent);
+          messageElement.appendChild(videoFrame);
+        }
+      } else {
+        messageContent.textContent = message;
+        messageElement.appendChild(avatarElement);
+        messageElement.appendChild(messageContent);
+      }
+
+      chatContainer.appendChild(messageElement);
+      chatContainer.scrollTop = chatContainer.scrollHeight; // Scroll to the bottom
+    }
+
+    async function getChatbotResponse(userMessage) {
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: userMessage }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          displayMessage('bot', data.response);
+          saveChatHistory('bot', data.response);
+        } else {
+          console.error('Error in bot response:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Failed to get bot response:', error);
+      }
+    }
+
+    function saveChatHistory(sender, message) {
+      const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+      chatHistory.push({ sender, message });
+      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    }
+  </script>
+</body>
+</html>
