@@ -104,5 +104,5 @@ ChaTA is designed to significantly improve the student learning experience:
 
 ---
 
-Thank you for your interest in ChaTA! We hope this tool enhances the educational experience for students and educators alike.
+Thank you for your interest in ChaTA! I hope this tool enhances the educational experience for students and educators alike.
 
